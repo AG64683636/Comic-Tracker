@@ -12,6 +12,13 @@ Comic Tracker is a web-based application for managing comic book collections. It
 
 ---
 
+## Screenshots
+
+![Comic Tracker UI 1](static/Screenshot-1.jpg)
+![Comic Tracker UI 1](static/Screenshot-2.jpg)
+![Read Comic Example](static/Screenshot-3.jpg)
+---
+
 ## Setup Instructions
 
 ### Prerequisites
