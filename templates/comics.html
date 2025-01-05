@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comic Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .navbar {
+            margin-bottom: 20px;
+        }
+
+        .storyline-header {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            color: #343a40;
+            border-left: 4px solid #0d6efd;
+            padding-left: 10px;
+        }
+
+        .comic-card {
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+        }
+
+        .comic-card.read {
+            opacity: 0.5;
+        }
+
+        .comic-card .read-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .comic-card.read .read-label {
+            display: block;
+        }
+
+        .comic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .comic-card img {
+            width: 100%;
+            height: 600px;
+            object-fit: cover;
+        }
+
+        .comic-card-body {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .comic-card-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #0d6efd;
+            text-align: center;
+        }
+
+        .comic-card-details {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            width: 350px;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #0d6efd;
+            display: block;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .sidebar a:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Comic Tracker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/upload">Upload Comics</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        {% if database_empty %}
+        <div class="row">
+            <div class="col text-center">
+                <h2>No Comics Found</h2>
+                <p>Please upload a CSV file to get started.</p>
+                <a href="/upload" class="btn btn-primary">Upload CSV</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-md-3 sidebar">
+                <h5>Storylines</h5>
+                <ul class="list-unstyled">
+                    {% for storyline in comics_by_storyline.keys() %}
+                    <li><a href="#storyline-{{ loop.index }}">{{ storyline }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="col-md-9">
+                <div class="d-flex justify-content-end mb-3">
+                    <select id="sort-dropdown" class="form-select w-auto" onchange="changeSort()">
+                        <option value="storyline" {% if sort_option == 'storyline' %}selected{% endif %}>Sort by Storyline</option>
+                        <option value="id" {% if sort_option == 'id' %}selected{% endif %}>Sort by ID</option>
+                    </select>
+                </div>
+
+                {% for storyline, comics in comics_by_storyline.items() %}
+                <div id="storyline-{{ loop.index }}" class="storyline-header">
+                    {{ storyline }}
+                    <span class="badge bg-secondary">
+                        {{ comics|selectattr('status', 'equalto', 'Read')|list|length }}/{{ comics|length }}
+                    </span>
+                </div>
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+                    {% for comic in comics %}
+                    <div class="col">
+                        <div class="comic-card {% if comic.status == 'Read' %}read{% endif %}">
+                            <img src="{{ comic.cover_image_url or '/static/default_cover.jpg' }}" alt="{{ comic.issue_title or 'No Cover' }}">
+                            <div class="comic-card-body">
+                                <div class="comic-card-title">{{ comic.issue }} #{{ comic.issue_number }}</div>
+                                <div class="comic-card-details">
+                                    <strong>Title:</strong> {{ comic.issue_title or 'N/A' }}<br>
+                                    <strong>Year:</strong> {{ comic.issue_published_year or 'N/A' }}<br>
+                                    <strong>TBP:</strong> {{ comic.tbp or 'N/A' }}<br>
+                                    <strong>Availability:</strong> {{ comic.availability or 'N/A' }}
+                                </div>
+                                <div class="btn-group w-100">
+                                    <button class="btn {% if comic.status == 'Read' %}btn-outline-secondary{% else %}btn-outline-success{% endif %}"
+                                        onclick="updateStatus(this, '{{ comic.id }}')"
+                                        data-status="{{ 'Unread' if comic.status == 'Read' else 'Read' }}">
+                                        {{ 'Undo Read' if comic.status == 'Read' else 'Mark as Read' }}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="read-label">Read</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer class="text-center mt-4">
+        <p>Data provided by <a href="https://comicvine.gamespot.com/" target="_blank">Comic Vine</a>.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function changeSort() {
+            const sortOption = document.getElementById('sort-dropdown').value;
+            window.location.href = `/?sort=${sortOption}`;
+        }
+
+        async function updateStatus(button, comicId) {
+            const status = button.getAttribute('data-status');
+            try {
+                const response = await fetch(`/update_status/${comicId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        // Update button appearance and status
+                        const comicCard = button.closest('.comic-card');
+                        const readLabel = comicCard.querySelector('.read-label');
+
+                        if (status === "Read") {
+                            button.textContent = "Undo Read";
+                            button.classList.remove("btn-outline-success");
+                            button.classList.add("btn-outline-secondary");
+                            button.setAttribute("data-status", "Unread");
+
+                            // Add 'read' class and display label
+                            comicCard.classList.add("read");
+                            readLabel.textContent = "Read";
+                        } else {
+                            button.textContent = "Mark as Read";
+                            button.classList.remove("btn-outline-secondary");
+                            button.classList.add("btn-outline-success");
+                            button.setAttribute("data-status", "Read");
+
+                            // Remove 'read' class and hide label
+                            comicCard.classList.remove("read");
+                            readLabel.textContent = "";
+                        }
+                    } else {
+                        alert(data.error || "Failed to update the comic status.");
+                    }
+                } else {
+                    alert("Error: Unable to update status. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("An unexpected error occurred.");
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
