@@ -42,13 +42,21 @@ Comic Tracker is a web-based application for managing comic book collections. It
 
 comic-tracker/
 ├── app.py                  # Main Flask app
+
 ├── api_client.py           # Comic Vine API client
+
 ├── import_data.py          # Handles CSV uploads and database updates
+
 ├── models.py               # SQLAlchemy database models
+
 ├── templates/              # HTML templates for Flask views
+
 ├── static/                 # Static assets (CSS, JS, images)
+
 ├── database/               # Database initialization and configuration
+
 ├── tests/                  # Unit tests for the application
+
 └── README.md               # This file
 
 ---
