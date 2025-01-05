@@ -32,18 +32,26 @@ Comic Tracker is a web-based application for managing comic book collections. It
 
 ### Installation
 1. Clone the repository:
+   
     git clone https://github.com/your-repo/comic-tracker.git
+   
     cd comic-tracker
 
-2. Install dependencies:
+3. Install dependencies:
+   
     pip install -r requirements.txt
 
-3. Set environment variables in a `.env` file:
-    SECRET_KEY=your_secret_key
-    DATABASE_URI=sqlite:///comics.db
-    COMIC_VINE_API_KEY=your_comic_vine_api_key
+5. Set environment variables in a `.env` file:
+6. 
 
-4. Initialize the database:
+   SECRET_KEY=your_secret_key
+      
+   DATABASE_URI=sqlite:///comics.db
+   
+   COMIC_VINE_API_KEY=your_comic_vine_api_key
+
+8. Initialize the database:
+   
     python app.py
 
 ---
